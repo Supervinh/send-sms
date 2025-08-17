@@ -1,0 +1,9 @@
+.dart_tool
+.idea
+.build
+.env
+macos
+linux
+ios
+windows
+.metadata

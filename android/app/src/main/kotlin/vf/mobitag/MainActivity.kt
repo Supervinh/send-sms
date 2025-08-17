@@ -1,4 +1,4 @@
-package com.example.mobitag
+package vf.mobitag
 
 import io.flutter.embedding.android.FlutterActivity
 
