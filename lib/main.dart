@@ -1,8 +1,7 @@
-import 'package:english_words/english_words.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter/services.dart';
 
 void main() async {
   await dotenv.load();
@@ -14,27 +13,14 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => MyAppState(),
-      child: MaterialApp(
-        title: 'Namer App',
-        theme: ThemeData(
-          useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange),
-        ),
-        home: MyHomePage(),
+    return MaterialApp(
+      title: 'Mobitag SMS',
+      theme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange),
       ),
+      home: MyHomePage(),
     );
-  }
-}
-
-class MyAppState extends ChangeNotifier {
-  var current = WordPair.random();
-
-  // ↓ Add this.
-  void getNext() {
-    current = WordPair.random();
-    notifyListeners();
   }
 }
 
@@ -79,19 +65,39 @@ class _MyHomePageState extends State<MyHomePage> {
     String recipient = recipientController.text.trim();
     String message = messageController.text.trim();
     final apiKey = dotenv.env['OPTNC_MOBITAGNC_API_KEY'];
+
+    if (sender.isNotEmpty && sender.length != 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Le numéro expéditeur doit contenir exactement 6 chiffres ou être vide.')),
+      );
+      return;
+    }
+    if (recipient.length != 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Le numéro destinataire doit contenir exactement 6 chiffres.')),
+      );
+      return;
+    }
+
+    if (message.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Le message est obligatoire.')),
+      );
+      return;
+    }
+
     if (apiKey == null || apiKey.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Clé API manquante.')),
       );
       return;
     }
-    // log apiKey for debugging purposes
-    print('API Key HEHEHE: $apiKey');
+
     final url = Uri.parse('https://api.opt.nc/mobitag/sendSms');
     final response = await http.post(
       url,
       headers: {
-        'Authorization': 'Bearer $apiKey',
+        'x-apikey': $apiKey,
         'Content-Type': 'application/json',
       },
       body: '''{
@@ -113,9 +119,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    // var appState = context.watch<MyAppState>();
-    // var pair = appState.current;
-
     return Scaffold(
       body: SafeArea(
         child: Center(
@@ -134,21 +137,29 @@ class _MyHomePageState extends State<MyHomePage> {
                       border: OutlineInputBorder(),
                     ),
                     keyboardType: TextInputType.phone,
+                    maxLength: 6,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                    ],
                   ),
                   SizedBox(height: 16),
                   TextField(
                     controller: recipientController,
                     decoration: InputDecoration(
-                      labelText: 'Numéro destinataire',
+                      labelText: 'Numéro destinataire *',
                       border: OutlineInputBorder(),
                     ),
                     keyboardType: TextInputType.phone,
+                    maxLength: 6,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                    ],
                   ),
                   SizedBox(height: 16),
                   TextField(
                     controller: messageController,
                     decoration: InputDecoration(
-                      labelText: 'Message',
+                      labelText: 'Message *',
                       border: OutlineInputBorder(),
                     ),
                     maxLines: 3,
@@ -164,27 +175,6 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-class RandomPair extends StatelessWidget {
-  const RandomPair({super.key, required this.pair});
-
-  final WordPair pair;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Card(
-      // color: theme.colorScheme.primary,
-      // red color with a theme
-      color: theme.colorScheme.primary,
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Text(pair.asLowerCase),
       ),
     );
   }
