@@ -64,7 +64,8 @@ class _MyHomePageState extends State<MyHomePage> {
     String sender = senderController.text.trim();
     String recipient = recipientController.text.trim();
     String message = messageController.text.trim();
-    final apiKey = dotenv.env['OPTNC_MOBITAGNC_API_KEY'];
+    final apiUrl = dotenv.env['API_URL'];
+    final apiKey = dotenv.env['API_KEY'];
 
     if (sender.isNotEmpty && sender.length != 6) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -93,11 +94,18 @@ class _MyHomePageState extends State<MyHomePage> {
       return;
     }
 
-    final url = Uri.parse('https://api.opt.nc/mobitag/sendSms');
+    if (apiUrl == null || apiUrl.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('URL de l\'API manquante.')),
+      );
+      return;
+    }
+
+    final url = Uri.parse(apiUrl);
     final response = await http.post(
       url,
       headers: {
-        'x-apikey': $apiKey,
+        'x-apikey': apiKey,
         'Content-Type': 'application/json',
       },
       body: '''{
@@ -106,13 +114,16 @@ class _MyHomePageState extends State<MyHomePage> {
         "message": "$message"
       }''',
     );
-    if (response.statusCode == 200) {
+    if (response.statusCode == 200 || response.statusCode == 202) {
+      senderController.clear();
+      recipientController.clear();
+      messageController.clear();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Message envoyé avec succès !')),
+        SnackBar(content: Text('SMS envoyé avec succès.')),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erreur lors de l\'envoi : ${response.body}')),
+        SnackBar(content: Text('Échec de l\'envoi du SMS. Code: ${response.statusCode}')),
       );
     }
   }
@@ -120,60 +131,133 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  SizedBox(height: 32),
-                  TextField(
-                    controller: senderController,
-                    decoration: InputDecoration(
-                      labelText: 'Numéro expéditeur',
-                      border: OutlineInputBorder(),
-                    ),
-                    keyboardType: TextInputType.phone,
-                    maxLength: 6,
-                    inputFormatters: [
-                      FilteringTextInputFormatter.digitsOnly,
-                    ],
+        child: Column(
+          children: [
+            // Header
+            Container(
+              width: double.infinity,
+              color: Color(0xFF3897F0),
+              padding: const EdgeInsets.symmetric(vertical: 32),
+              child: Center(
+                child: Text(
+                  'Envoyer un SMS',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
                   ),
-                  SizedBox(height: 16),
-                  TextField(
-                    controller: recipientController,
-                    decoration: InputDecoration(
-                      labelText: 'Numéro destinataire *',
-                      border: OutlineInputBorder(),
-                    ),
-                    keyboardType: TextInputType.phone,
-                    maxLength: 6,
-                    inputFormatters: [
-                      FilteringTextInputFormatter.digitsOnly,
-                    ],
-                  ),
-                  SizedBox(height: 16),
-                  TextField(
-                    controller: messageController,
-                    decoration: InputDecoration(
-                      labelText: 'Message *',
-                      border: OutlineInputBorder(),
-                    ),
-                    maxLines: 3,
-                    maxLength: maxMessageLength,
-                  ),
-                  SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: sendMessage,
-                    child: Text('Envoyer'),
-                  ),
-                ],
+                ),
               ),
             ),
-          ),
+            Expanded(
+              child: Center(
+                child: SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(height: 24),
+                        Text(
+                          'Expéditeur',
+                          style: TextStyle(
+                            fontSize: 20,
+                            color: Colors.black,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        SizedBox(height: 8),
+                        TextField(
+                          controller: senderController,
+                          decoration: InputDecoration(
+                            hintText: '',
+                            border: OutlineInputBorder(),
+                            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          ),
+                          keyboardType: TextInputType.phone,
+                          maxLength: 6,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                          ],
+                        ),
+                        SizedBox(height: 16),
+                        Text(
+                          'Destinataire',
+                          style: TextStyle(
+                            fontSize: 20,
+                            color: Colors.black,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        SizedBox(height: 8),
+                        TextField(
+                          controller: recipientController,
+                          decoration: InputDecoration(
+                            hintText: '',
+                            border: OutlineInputBorder(),
+                            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          ),
+                          keyboardType: TextInputType.phone,
+                          maxLength: 6,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                          ],
+                        ),
+                        SizedBox(height: 16),
+                        Text(
+                          'Message',
+                          style: TextStyle(
+                            fontSize: 20,
+                            color: Colors.black,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        SizedBox(height: 8),
+                        TextField(
+                          controller: messageController,
+                          decoration: InputDecoration(
+                            hintText: 'Tapez votre message...',
+                            border: OutlineInputBorder(),
+                            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                          ),
+                          maxLines: 3,
+                          maxLength: maxMessageLength,
+                        ),
+                        SizedBox(height: 32),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 56,
+                          child: ElevatedButton(
+                            onPressed: sendMessage,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Color(0xFF3897F0),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              elevation: 0,
+                            ),
+                            child: Text(
+                              'ENVOYER',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.w500,
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: 32),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
