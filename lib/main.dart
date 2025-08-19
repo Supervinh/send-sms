@@ -14,7 +14,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Mobitag SMS',
+      title: 'SmsSender SMS',
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange),
@@ -69,46 +69,52 @@ class _MyHomePageState extends State<MyHomePage> {
 
     if (sender.isNotEmpty && sender.length != 6) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Le numéro expéditeur doit contenir exactement 6 chiffres ou être vide.')),
+        SnackBar(
+          content: Text(
+            'Le numéro expéditeur doit contenir exactement 6 chiffres ou être vide.',
+          ),
+        ),
       );
       return;
     }
     if (recipient.length != 6) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Le numéro destinataire doit contenir exactement 6 chiffres.')),
+        SnackBar(
+          content: Text(
+            'Le numéro destinataire doit contenir exactement 6 chiffres.',
+          ),
+        ),
       );
       return;
     }
 
     if (message.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Le message est obligatoire.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Le message est obligatoire.')));
       return;
     }
 
     if (apiKey == null || apiKey.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Clé API manquante.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Clé API manquante.')));
       return;
     }
 
     if (apiUrl == null || apiUrl.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('URL de l\'API manquante.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('URL de l\'API manquante.')));
       return;
     }
 
     final url = Uri.parse(apiUrl);
     final response = await http.post(
       url,
-      headers: {
-        'x-apikey': apiKey,
-        'Content-Type': 'application/json',
-      },
-      body: '''{
+      headers: {'x-apikey': apiKey, 'Content-Type': 'application/json'},
+      body:
+          '''{
         "from": "$sender",
         "to": "$recipient",
         "message": "$message"
@@ -118,12 +124,16 @@ class _MyHomePageState extends State<MyHomePage> {
       senderController.clear();
       recipientController.clear();
       messageController.clear();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('SMS envoyé avec succès.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('SMS envoyé avec succès.')));
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Échec de l\'envoi du SMS. Code: ${response.statusCode}')),
+        SnackBar(
+          content: Text(
+            'Échec de l\'envoi du SMS. Code: ${response.statusCode}',
+          ),
+        ),
       );
     }
   }
@@ -175,7 +185,10 @@ class _MyHomePageState extends State<MyHomePage> {
                           decoration: InputDecoration(
                             hintText: '',
                             border: OutlineInputBorder(),
-                            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
                           ),
                           keyboardType: TextInputType.phone,
                           maxLength: 6,
@@ -198,7 +211,10 @@ class _MyHomePageState extends State<MyHomePage> {
                           decoration: InputDecoration(
                             hintText: '',
                             border: OutlineInputBorder(),
-                            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
                           ),
                           keyboardType: TextInputType.phone,
                           maxLength: 6,
@@ -221,7 +237,10 @@ class _MyHomePageState extends State<MyHomePage> {
                           decoration: InputDecoration(
                             hintText: 'Tapez votre message...',
                             border: OutlineInputBorder(),
-                            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 16,
+                            ),
                           ),
                           maxLines: 3,
                           maxLength: maxMessageLength,

@@ -1,6 +1,6 @@
 {
-    "name": "mobitag",
-    "short_name": "mobitag",
+    "name": "SmsSender",
+    "short_name": "SmsSender",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
