@@ -37,7 +37,7 @@ dependencies:
   provider: ^6.1.5
 
   english_words: any
-  http: ^1.2.1
+  http: ^1.6.0
   flutter_dotenv: ^6.0.0
 dev_dependencies:
   flutter_test:
